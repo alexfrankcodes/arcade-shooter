@@ -21,6 +21,7 @@ class ofApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
+		void checkCollisions();
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -44,7 +45,7 @@ class ofApp : public ofBaseApp{
 		
 		// Initializations
 		Sprite sprite;
-		Emitter *emitter;
+		Emitter *enemyEmitter1, *enemyEmitter2, *gun;
 		ofVec3f start_point;
 		ofVec3f finish_point;
 		float start_time;
@@ -58,6 +59,7 @@ class ofApp : public ofBaseApp{
 		// Images for player and projectiles
 		ofImage playerImage;
 		ofImage bulletImage;
+		ofImage enemyImage;
 
 		// Slider setup
 		ofxFloatSlider rate;
@@ -74,4 +76,6 @@ class ofApp : public ofBaseApp{
 		
 		// Sounds
 		ofSoundPlayer shot;
+
+		int score;
 };

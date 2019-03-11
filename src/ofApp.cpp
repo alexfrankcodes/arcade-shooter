@@ -35,12 +35,39 @@ void ofApp::setup(){
 	moveDir = MoveStop;
 
 	// Set up bullet emitter
-	emitter = new Emitter(new SpriteSystem());
+	gun = new Emitter(new SpriteSystem());
 	if (bulletImage.loadImage("images/bullet.png")) {
-		emitter->setChildImage(bulletImage);
+		gun->setChildImage(bulletImage);
 	}
-	emitter->setPosition(ofVec3f(ofGetWindowWidth() / 2, ofGetWindowHeight() / 2 - 60, 0));
-	emitter->start();
+	gun->setPosition(ofVec3f(ofGetWindowWidth() / 2, ofGetWindowHeight() / 2 - 60, 0));
+	gun->start();
+
+	// Set up enemy emitters
+	enemyEmitter1 = new Emitter(new SpriteSystem());
+	if (enemyImage.loadImage("images/enemy1.png")) {
+		enemyImage.resize(50, 50);
+		enemyEmitter1->setChildImage(enemyImage);
+	}
+	enemyEmitter1->setPosition(ofVec3f(100, 10, 0));
+	enemyEmitter1->velocity.set(0, 300, 0);
+	enemyEmitter1->setLifespan(5000);
+	enemyEmitter1->setRate(1);
+	enemyEmitter1->setChildSize(50, 50);
+	enemyEmitter1->start();
+
+	enemyEmitter2 = new Emitter(new SpriteSystem());
+	if (enemyImage.loadImage("images/enemy1.png")) {
+		enemyImage.resize(50, 50);
+		enemyEmitter2->setChildImage(enemyImage);
+	}
+	enemyEmitter2->setPosition(ofVec3f(ofGetWindowWidth() - 100, 10, 0));
+	enemyEmitter2->velocity.set(0, 300, 0);
+	enemyEmitter2->setLifespan(5000);
+	enemyEmitter2->setRate(1);
+	enemyEmitter2->setChildSize(50, 50);
+	enemyEmitter2->start();
+
+
 
 	//GUI setup
 	gui.setup();
@@ -52,10 +79,41 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update() {
 	updateSprite();
-	emitter->setRate(currentRate);
-	emitter->setLifespan(life * 1000);  
-	emitter->setVelocity(ofVec3f(velocity));
-	emitter->update();
+	gun->setRate(currentRate);
+	gun->setLifespan(life * 1000);  
+	gun->setVelocity(ofVec3f(velocity));
+	gun->update();
+	enemyEmitter1->update();
+	enemyEmitter2->update();
+	checkCollisions();
+
+	// Vary initial enemy velocity
+	ofVec3f v1 = enemyEmitter1->velocity;
+	enemyEmitter1->setVelocity(ofVec3f(ofRandom(-v1.y / 2, v1.y / 2), v1.y, v1.z));
+
+	ofVec3f v2 = enemyEmitter1->velocity;
+	enemyEmitter2->setVelocity(ofVec3f(ofRandom(-v2.y / 2, v2.y / 2), v2.y, v2.z));
+
+}
+
+//  This is a simple O(M x N) collision check
+//  For each missle check to see which invaders you hit and remove them
+//
+void ofApp::checkCollisions() {
+
+	// find the distance at which the two sprites (missles and invaders) will collide
+	// detect a collision when we are within that distance.
+	//
+	float collisionDist = gun->childHeight / 2 + enemyEmitter1->childHeight / 2;
+
+	// Loop through all the missiles, then remove any invaders that are within
+	// "collisionDist" of the missiles.  the removeNear() function returns the
+	// number of missiles removed.
+	//
+	for (int i = 0; i < gun->sys->sprites.size(); i++) {
+		score += enemyEmitter1->sys->removeNear(gun->sys->sprites[i].trans, collisionDist);
+		score += enemyEmitter2->sys->removeNear(gun->sys->sprites[i].trans, collisionDist);
+	}
 }
 
 // Given a distance return a modulated value between 1-10 based on 
@@ -123,7 +181,7 @@ void ofApp::updateSprite() {
 
 	// Translate sprite and bullet emitter together
 	sprite.trans += dir;
-	emitter->trans += dir;
+	gun->trans += dir;
 }
 
 // Start sprite helper methods -------------------------------
@@ -156,12 +214,21 @@ void ofApp::draw(){
 
 	// Draw player and bullets
 	sprite.draw();
-	emitter->draw();
+	gun->draw();
+	enemyEmitter1->draw();
+	enemyEmitter2->draw();
 
 	// Draw user interface
 	if (!bToggleGUI) {
 		gui.draw();
 	}
+
+	// Draw current score
+	string scoreText;
+	scoreText += "Score: " + std::to_string(score);
+	ofDrawBitmapString(scoreText, ofPoint(10, 20));
+
+
 }
 
 
@@ -179,7 +246,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 	ofPoint mouse_cur = ofPoint(x, y);
 	ofVec3f delta = mouse_cur - mouse_last;
 	sprite.trans += delta;
-	emitter->trans += delta;
+	gun->trans += delta;
 	mouse_last = mouse_cur;
 }
 

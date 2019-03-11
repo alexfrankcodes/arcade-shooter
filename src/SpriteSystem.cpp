@@ -24,18 +24,21 @@ void SpriteSystem::remove(int i) {
 }
 
 // Remove all sprites within a given dist of point
-void SpriteSystem::removeNear(ofVec3f point, float dist) {
+int SpriteSystem::removeNear(ofVec3f point, float dist) {
 	vector<Sprite>::iterator s = sprites.begin();
 	vector<Sprite>::iterator tmp;
+	int count = 0;
 
 	while (s != sprites.end()) {
 		ofVec3f v = s->trans - point;
 		if (v.length() < dist) {
 			tmp = sprites.erase(s);
+			count++;
 			s = tmp;
 		}
 		else s++;
 	}
+	return count;
 }
 
 
